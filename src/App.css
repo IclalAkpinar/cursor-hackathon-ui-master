@@ -1,0 +1,153 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.calendar-content {
+  width: 100%;
+  max-width: 1200px;
+}
+
+.calendar-content th,
+.calendar-content td {
+  border: 1px solid #fafafa;
+  padding: 0.5rem 1rem;
+  text-align: left;
+}
+
+.calendar-content th {
+  background-color: #ba2038;
+  font-weight: 600;
+  color: #f5f4f2;
+}
+
+.calendar-content tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.custom-row-background {
+  background-color: #f9fafb !important;
+}
+
+/* .ant-table-thead > tr > th {
+  color: #BA2038 !important;
+  background-color: #FAFAFA !important;
+} */
+
+.triangle {
+  clip-path: polygon(100% 0, 100% 100%, 0 50%);
+}
+
+.transition-effect {
+  animation: scrollToBlock ease-in-out;
+  animation-timeline: view(97vh 0px);
+}
+
+.transition-effect-small {
+  animation: scrollToBlock ease-in-out;
+  animation-timeline: view(80vh 0px);
+}
+
+.top-radial-gradient {
+  background: radial-gradient(circle at 0% 0%, #b0b1b520 0, transparent 70%),
+    radial-gradient(circle at 90% 50%, #b0b1b520 0, transparent 30%),
+    radial-gradient(circle at 10% 70%, #b0b1b520 0, transparent 30%),
+    radial-gradient(circle at 90% 90%, #b0b1b520 0, transparent 30%);
+}
+
+@media (min-width: 640px) {
+  .dark-about-section {
+    background: radial-gradient(circle at 75% 50%, transparent, #01010f 50%);
+  }
+}
+
+@media (max-width: 640px) {
+  .dark-about-section {
+    background: radial-gradient(circle at 50% 50%, transparent, #01010f);
+  }
+}
+@media (min-width: 640px) {
+  .dark-national-tech-section {
+    background: radial-gradient(ellipse at 50% 50%, transparent, #01010f 75%);
+  }
+}
+
+@media (max-width: 640px) {
+  .dark-national-tech-section {
+    background: radial-gradient(ellipse at 50% 50%, transparent, #01010f);
+  }
+}
+
+/* Dark mode için özelleştirilmiş CSS */
+.checkbox-dark-mode .ant-checkbox-inner {
+  border-color: white !important; /* Dark mode'da beyaz çerçeve */
+  background-color: black !important; /* Dark mode'da siyah arka plan */
+}
+
+.checkbox-dark-mode .ant-checkbox-input:checked + .ant-checkbox-inner {
+  background-color: white !important; /* Seçildiğinde beyaz arka plan */
+  border-color: white !important; /* Seçildiğinde beyaz çerçeve */
+}
+
+
+
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+
+
+  input:-webkit-autofill {
+    background-color: var(--ant-input-bg) !important;
+    -webkit-box-shadow: 0 0 0px 1000px var(--ant-input-bg) inset !important;
+    color: inherit !important;
+  }
+
+  .t3kys-link {
+  color: #1890ff;
+  text-decoration: underline;
+  transition: color 0.2s;
+      font-weight: 500 ;
+
+}
+.t3kys-link:hover {
+  color: #4096ff;
+  text-decoration: underline;
+    font-weight: 500 ;
+
+}
+
+
