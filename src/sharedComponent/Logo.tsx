@@ -6,7 +6,7 @@ export const Logo = ({ className }: { className: string }) => {
   <a rel="Ansayfaya dön" href="/">
    <Kapsul
     className={`${className} cursor-pointer`}
-    alt="Kapsül Teknoloji Platformu Logo"
+    alt="cnauts"
    />
   </a>
  );

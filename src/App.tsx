@@ -28,14 +28,10 @@ const RouteSetter = ({ role }: { role: string }) => {
   switch (role) {
     case "none":
       return <Routes.NoneRouter />;
-    case "super-admin":
-      return <Routes.SuperAdminRouter />;
-    case "admin":
-      return <Routes.AdminRouter />;
+  
     case "member":
       return <Routes.MemberRouter />;
-    case "limited-admin":
-      return <Routes.LimitedAdminRouter />;
+  
     default:
       return <></>;
   }

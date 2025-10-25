@@ -1,4 +1,4 @@
-import { AdminLayout, NoneLayout } from "../../layouts";
+import {  NoneLayout } from "../../layouts";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { memberRouteDatas, routerType } from "./router.data";
 
@@ -8,7 +8,6 @@ export const MemberRouter = () => {
  });
  return (
   <Routes>
-   <Route path="" element={<AdminLayout />} children={pageRoutes} />
    <Route path="*" element={<Navigate to={"/404"} />} />
   </Routes>
  );
