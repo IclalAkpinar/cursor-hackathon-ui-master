@@ -42,7 +42,7 @@ export const Sidebar = ({ items, userName = "Kullanıcı" }: SidebarProps) => {
   )}
 >
         <div className="p-4 border-b border-gray-200">
-          <h1 className="text-lg font-semibold text-gray-800">Kapsül Yönetim Sistemi</h1>
+          <h1 className="text-lg font-semibold text-gray-800">CURSOR HACKATHON</h1>
         </div>
 
         <nav className="p-2 space-y-1 flex-1 overflow-y-auto">

@@ -19,7 +19,7 @@ export const Login: React.FC = () => {
             <Kapsul className="w-16 h-16" />
           </div>
           <h2 className="text-2xl font-medium text-center mb-4">
-            Kapsül Yönetim Sistemi
+            CURSOR HACKATHON
           </h2>
           <h1 className="text-xl text-gray-900 dark:text-white font-semibold text-center mb-8">
             Giriş Yap
