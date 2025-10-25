@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Card, Button, Avatar, Tag, message, Empty, Badge } from "antd";
+import { Card, Button, Tag, message, Empty, Badge } from "antd";
 import { useNavigate } from "react-router-dom";
 import { 
-  UserOutlined, 
   ClockCircleOutlined, 
   PlayCircleOutlined,
   CalendarOutlined,
@@ -22,6 +21,27 @@ interface Appointment {
   status: "pending" | "accepted" | "in-progress";
   countdown: number; // saniye cinsinden
 }
+
+// Kullanıcı maskotları - her kullanıcıya tatlı bir karakter
+const USER_MASCOTS: Record<string, string> = {
+  "Ahmet": "🐻",
+  "Ayşe": "🐰",
+  "Mehmet": "🦊",
+  "Zeynep": "🐼",
+  "Ali": "🐸",
+  "Fatma": "🐱",
+  "Mustafa": "🦁",
+  "Ayşegül": "🐶",
+  "Burak": "🐨",
+  "Elif": "🦄",
+  "Can": "🐭",
+  "Merve": "🐧",
+};
+
+// Kullanıcıya maskot ata veya varsayılan avatar kullan
+const getMascot = (userName: string): string => {
+  return USER_MASCOTS[userName] || "👤";
+};
 
 export const Appointments: React.FC = () => {
   const navigate = useNavigate();
@@ -159,17 +179,22 @@ export const Appointments: React.FC = () => {
                   {/* Left Section - User Info */}
                   <div className="flex items-center gap-4 flex-1">
                     <div className="relative">
-                      <Avatar 
-                        size={64} 
-                        icon={<UserOutlined />}
-                        className="border-2 shadow-md"
+                      <div 
+                        className="flex items-center justify-center border-2 shadow-md rounded-full hover:scale-110 transition-transform duration-300"
                         style={{ 
-                          backgroundColor: appointment.status === "accepted" ? '#243568' : '#faad14',
-                          borderColor: appointment.status === "accepted" ? '#243568' : '#faad14'
+                          width: '64px', 
+                          height: '64px',
+                          fontSize: '36px',
+                          backgroundColor: appointment.status === "accepted" 
+                            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+                            : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                          borderColor: appointment.status === "accepted" ? '#667eea' : '#f5576c'
                         }}
-                      />
+                      >
+                        {getMascot(appointment.userName)}
+                      </div>
                       {appointment.status === "accepted" && (
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-ktp_gray"></div>
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-ktp_gray animate-pulse"></div>
                       )}
                     </div>
                     <div className="flex-1">

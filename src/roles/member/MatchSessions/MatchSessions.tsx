@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Card, Button, Avatar, Tag, message, Empty } from "antd";
+import { Card, Button, Tag, message, Empty } from "antd";
 import { useNavigate } from "react-router-dom";
 import { 
-  UserOutlined, 
   ClockCircleOutlined, 
   BookOutlined, 
   TeamOutlined,
@@ -20,6 +19,27 @@ interface Session {
   duration: number;
   isPrivate: boolean;
 }
+
+// Kullanıcı maskotları - her kullanıcıya tatlı bir karakter
+const USER_MASCOTS: Record<string, string> = {
+  "Ahmet": "🐻",
+  "Ayşe": "🐰",
+  "Mehmet": "🦊",
+  "Zeynep": "🐼",
+  "Ali": "🐸",
+  "Fatma": "🐱",
+  "Mustafa": "🦁",
+  "Ayşegül": "🐶",
+  "Burak": "🐨",
+  "Elif": "🦄",
+  "Can": "🐭",
+  "Merve": "🐧",
+};
+
+// Kullanıcıya maskot ata veya varsayılan avatar kullan
+const getMascot = (userName: string): string => {
+  return USER_MASCOTS[userName] || "👤";
+};
 
 export const MatchSessions: React.FC = () => {
   const navigate = useNavigate();
@@ -140,13 +160,17 @@ export const MatchSessions: React.FC = () => {
                   {/* Left Section - User Info */}
                   <div className="flex items-center gap-4 flex-1">
                     <div className="relative">
-                      <Avatar 
-                        size={64} 
-                        icon={<UserOutlined />}
-                        className="border-2 border-ktp_delft_blue shadow-md"
-                        style={{ backgroundColor: '#243568' }}
-                      />
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-ktp_gray"></div>
+                      <div 
+                        className="flex items-center justify-center border-2 border-ktp_delft_blue shadow-md rounded-full bg-gradient-to-br from-blue-100 to-purple-100 hover:scale-110 transition-transform duration-300"
+                        style={{ 
+                          width: '64px', 
+                          height: '64px',
+                          fontSize: '36px'
+                        }}
+                      >
+                        {getMascot(session.userName)}
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-ktp_gray animate-pulse"></div>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
