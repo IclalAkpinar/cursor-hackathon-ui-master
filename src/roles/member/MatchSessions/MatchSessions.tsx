@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Card, Button, Avatar, Tag, message } from "antd";
+import { Card, Button, Avatar, Tag, message, Empty } from "antd";
 import { useNavigate } from "react-router-dom";
-import { UserOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import { 
+  UserOutlined, 
+  ClockCircleOutlined, 
+  BookOutlined, 
+  TeamOutlined,
+  CheckCircleOutlined,
+  SendOutlined 
+} from "@ant-design/icons";
 
 interface Session {
   id: string;
@@ -85,53 +92,129 @@ export const MatchSessions: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-ktp_white dark:bg-ktp_black p-6">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2 text-ktp_black dark:text-ktp_white">
-          Mevcut Oturumlar
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
-          {userPreferences &&
-            `${userPreferences.technique} tekniği ile ${userPreferences.area} çalışan kullanıcılar`}
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-ktp_white via-ktp_white to-blue-50 dark:from-ktp_black dark:via-ktp_gray dark:to-ktp_gray p-6">
+      <div className="max-w-5xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-ktp_delft_blue to-ktp_federal_blue mb-4">
+            <TeamOutlined className="text-3xl text-white" />
+          </div>
+          <h1 className="text-4xl font-bold mb-3 text-ktp_black dark:text-ktp_white">
+            Çalışma Arkadaşı Bul
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-400">
+            {userPreferences ? (
+              <>
+                <BookOutlined className="mr-2" />
+                {userPreferences.technique} ile <span className="font-semibold text-ktp_delft_blue">{userPreferences.area}</span> çalışan arkadaşlarını bul
+              </>
+            ) : (
+              "Aynı hedeflerle çalışan arkadaşlarını keşfet"
+            )}
+          </p>
+        </div>
 
+        {/* Sessions List */}
         {sessions.length === 0 ? (
-          <Card className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">
-              Henüz uygun oturum bulunamadı. Daha sonra tekrar deneyin.
-            </p>
+          <Card className="shadow-lg border-0">
+            <Empty
+              description={
+                <span className="text-gray-500 dark:text-gray-400">
+                  Henüz uygun oturum bulunamadı. Biraz sonra tekrar kontrol et!
+                </span>
+              }
+            />
           </Card>
         ) : (
           <div className="space-y-4">
-            {sessions.map((session) => (
-              <Card key={session.id} hoverable className="mb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Avatar size={48} icon={<UserOutlined />} />
-                    <div>
-                      <h3 className="text-lg font-semibold text-ktp_black dark:text-ktp_white">
-                        {session.userName}
-                      </h3>
-                      <div className="flex gap-2 mt-2">
-                        <Tag color="blue">{session.technique}</Tag>
-                        <Tag color="green">{session.area}</Tag>
-                        <Tag color="orange">{session.level}</Tag>
+            {sessions.map((session, index) => (
+              <Card 
+                key={session.id} 
+                hoverable 
+                className="mb-4 shadow-md hover:shadow-xl transition-all duration-300 border-0 overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,247,255,0.95) 100%)',
+                }}
+              >
+                <div className="flex items-center justify-between gap-6">
+                  {/* Left Section - User Info */}
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="relative">
+                      <Avatar 
+                        size={64} 
+                        icon={<UserOutlined />}
+                        className="border-2 border-ktp_delft_blue shadow-md"
+                        style={{ backgroundColor: '#243568' }}
+                      />
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-ktp_gray"></div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-xl font-bold text-ktp_black dark:text-ktp_white">
+                          {session.userName}
+                        </h3>
+                        <Tag 
+                          color="success" 
+                          icon={<CheckCircleOutlined />}
+                          className="text-xs"
+                        >
+                          Aktif
+                        </Tag>
                       </div>
-                      <div className="flex items-center gap-2 mt-2 text-gray-600 dark:text-gray-400">
-                        <ClockCircleOutlined />
-                        <span>
-                          {session.startTime} • {session.duration} dakika
+                      
+                      {/* Technique Badge */}
+                      <div className="mb-2">
+                        <Tag 
+                          color="processing" 
+                          className="text-sm font-semibold px-3 py-1"
+                        >
+                          {session.technique}
+                        </Tag>
+                      </div>
+                      
+                      {/* Area and Level */}
+                      <div className="flex gap-2 mb-2">
+                        <Tag color="success" className="text-sm">
+                          📚 {session.area}
+                        </Tag>
+                        <Tag color="warning" className="text-sm">
+                          🎓 {session.level}
+                        </Tag>
+                      </div>
+                      
+                      {/* Time Info */}
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                        <ClockCircleOutlined className="text-ktp_delft_blue" />
+                        <span className="text-sm font-medium">
+                          Başlangıç: <span className="font-bold text-ktp_delft_blue">{session.startTime}</span>
+                        </span>
+                        <span className="mx-2">•</span>
+                        <span className="text-sm">
+                          Süre: <span className="font-semibold">{session.duration} dk</span>
                         </span>
                       </div>
                     </div>
                   </div>
-                  <Button
-                    type="primary"
-                    onClick={() => handleJoinRequest(session.id)}
-                    className="bg-ktp_delft_blue hover:bg-ktp_federal_blue"
-                  >
-                    Katılım İste
-                  </Button>
+                  
+                  {/* Right Section - Action Button */}
+                  <div className="flex-shrink-0">
+                    <Button
+                      type="primary"
+                      size="large"
+                      icon={<SendOutlined />}
+                      onClick={() => handleJoinRequest(session.id)}
+                      className="bg-gradient-to-r from-ktp_delft_blue to-ktp_federal_blue hover:from-ktp_federal_blue hover:to-ktp_delft_blue border-0 shadow-md hover:shadow-lg transition-all duration-300"
+                      style={{ 
+                        height: '50px',
+                        borderRadius: '12px',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        padding: '0 32px'
+                      }}
+                    >
+                      Katılım İste
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
