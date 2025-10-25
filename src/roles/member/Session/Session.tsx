@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card, Button, Progress, Modal, Input, message, Tag, Avatar, Badge } from "antd";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { SendOutlined, ClockCircleOutlined, TeamOutlined, ThunderboltOutlined } from "@ant-design/icons";
 
 interface Message {
@@ -18,21 +18,78 @@ interface Participant {
   studyArea: string;
 }
 
+interface Appointment {
+  id: string;
+  userName: string;
+  technique: string;
+  area: string;
+  level: string;
+  startTime: string;
+  status: string;
+  countdown: number;
+}
+
+// Teknik ID'den teknik ismine ve süreye mapping
+const TECHNIQUE_CONFIG: Record<string, { name: string; duration: number; breakDuration: number }> = {
+  "pomodoro": { name: "Pomodoro Tekniği", duration: 25, breakDuration: 5 },
+  "52-17": { name: "52/17 Tekniği", duration: 52, breakDuration: 17 },
+  "time-blocking": { name: "Time Blocking", duration: 60, breakDuration: 15 },
+  "eisenhower": { name: "Eisenhower Matrisi", duration: 45, breakDuration: 10 },
+};
+
+// Teknik isminden ID bulma
+const getTechniqueId = (techniqueName: string): string => {
+  const technique = Object.entries(TECHNIQUE_CONFIG).find(
+    ([_, config]) => config.name === techniqueName
+  );
+  return technique ? technique[0] : "pomodoro";
+};
+
 export const Session: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [showStartScreen, setShowStartScreen] = useState(true);
   const [isWorking, setIsWorking] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 dakika = 1500 saniye
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [workDuration, setWorkDuration] = useState(25);
+  const [breakDuration, setBreakDuration] = useState(5);
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [breakStartTime, setBreakStartTime] = useState<Date | null>(null);
   
   // Mock katılımcılar - gerçek veri API'den gelecek
-  const [participants] = useState<Participant[]>([
+  const [participants, setParticipants] = useState<Participant[]>([
     { id: "1", name: "Ayşe Yılmaz", avatar: "👩‍💻", isActive: true, studyArea: "İngilizce" },
     { id: "2", name: "Sen", avatar: "👨‍💻", isActive: true, studyArea: "İngilizce" },
-    { id: "3", name: "Mehmet Demir", avatar: "🧑‍💻", isActive: true, studyArea: "İngilizce" },
+    { id: "3", name: "Ahmet", avatar: "🧑‍💻", isActive: true, studyArea: "İngilizce" },
   ]);
+
+  useEffect(() => {
+    // localStorage'dan appointment bilgilerini al
+    if (id) {
+      const appointments = JSON.parse(localStorage.getItem("appointments") || "[]");
+      const selectedAppointment = appointments.find((apt: Appointment) => apt.id === id);
+      
+      if (selectedAppointment) {
+        setAppointment(selectedAppointment);
+        
+        // Teknik bilgisine göre süreleri ayarla
+        const techniqueId = getTechniqueId(selectedAppointment.technique);
+        const config = TECHNIQUE_CONFIG[techniqueId];
+        
+        setWorkDuration(config.duration);
+        setBreakDuration(config.breakDuration);
+        setTimeLeft(config.duration * 60);
+        
+        // Katılımcıların study area'sını güncelle
+        setParticipants(prev => prev.map(p => ({
+          ...p,
+          studyArea: selectedAppointment.area
+        })));
+      }
+    }
+  }, [id]);
 
   useEffect(() => {
     // Çalışma oturumu başlatıldığında (sadece start screen kapandıktan sonra)
@@ -66,7 +123,7 @@ export const Session: React.FC = () => {
     return `${hours}:${minutes}`;
   };
 
-  const progress = ((25 * 60 - timeLeft) / (25 * 60)) * 100;
+  const progress = ((workDuration * 60 - timeLeft) / (workDuration * 60)) * 100;
 
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
@@ -93,10 +150,21 @@ export const Session: React.FC = () => {
     });
   };
 
+  const handleEndWorkSession = () => {
+    Modal.confirm({
+      title: "Çalışma Oturumunu Sonlandır",
+      content: "Çalışma oturumunu bitirip tartışma ekranına geçmek istediğinize emin misiniz?",
+      onOk: () => {
+        setIsWorking(false);
+        message.success("Şimdi tartışma zamanı!");
+      },
+    });
+  };
+
   const handleStartSession = () => {
-    // Mola saatini hesapla (25 dakika sonra)
+    // Mola saatini hesapla (tekniğe göre süre sonra)
     const now = new Date();
-    const breakTime = new Date(now.getTime() + 25 * 60 * 1000);
+    const breakTime = new Date(now.getTime() + workDuration * 60 * 1000);
     setBreakStartTime(breakTime);
     setShowStartScreen(false);
   };
@@ -109,15 +177,28 @@ export const Session: React.FC = () => {
           <div className="text-center py-12">
             {/* Başlık */}
             <h1 className="text-5xl font-bold mb-4">
-              <span className="text-ktp_delft_blue">Odaklanma</span>
-              <span className="text-teal-500">& İşbirliği</span>
-              <span className="text-ktp_delft_blue"> Platformu</span>
+              <span className="text-ktp_delft_blue">{appointment?.technique || "Pomodoro Tekniği"}</span>
             </h1>
             
             {/* Alt Başlık */}
-            <p className="text-xl text-gray-600 dark:text-gray-400 mb-12">
-              Pomodoro tekniği ile verimli çalışın, tartışma oturumlarıyla öğrenin
+            <p className="text-xl text-gray-600 dark:text-gray-400 mb-4">
+              {workDuration} dakika odaklanma, {breakDuration} dakika tartışma ile derin öğrenme
             </p>
+            
+            {/* Ders Bilgisi */}
+            {appointment && (
+              <div className="mb-12">
+                <Tag color="blue" className="text-lg px-4 py-2 mb-2">
+                  📚 {appointment.area}
+                </Tag>
+                <Tag color="orange" className="text-lg px-4 py-2 mb-2">
+                  🎓 {appointment.level}
+                </Tag>
+                <Tag color="green" className="text-lg px-4 py-2 mb-2">
+                  ⏱️ {workDuration} dakika çalışma
+                </Tag>
+              </div>
+            )}
 
             {/* Özellik Kartları */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -131,7 +212,7 @@ export const Session: React.FC = () => {
                     Odaklanma Modu
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 text-sm">
-                    25 dakikalık kesintisiz çalışma seansları ile maksimum verim
+                    {workDuration} dakikalık kesintisiz çalışma seansları ile maksimum verim
                   </p>
                 </div>
               </Card>
@@ -146,7 +227,7 @@ export const Session: React.FC = () => {
                     Tartışma Oturumları
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 text-sm">
-                    30 dakikalık interaktif tartışmalarla daha derin öğrenme
+                    {breakDuration} dakikalık interaktif tartışmalarla daha derin öğrenme
                   </p>
                 </div>
               </Card>
@@ -158,7 +239,7 @@ export const Session: React.FC = () => {
                     <ClockCircleOutlined className="text-white text-2xl" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
-                    Zaman Yönetimi
+                    {appointment?.technique || "Pomodoro Tekniği"}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 text-sm">
                     Otomatik zamanlayıcılar ile zamanınızı etkin kullanın
@@ -283,7 +364,7 @@ export const Session: React.FC = () => {
               </Card>
               <Card className="border-0 shadow-lg">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-teal-500">{25 - Math.floor(timeLeft / 60)}</div>
+                  <div className="text-3xl font-bold text-teal-500">{workDuration - Math.floor(timeLeft / 60)}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Geçen Dakika</div>
                 </div>
               </Card>
@@ -300,82 +381,149 @@ export const Session: React.FC = () => {
             <Button
               danger
               size="large"
-              onClick={handleEndSession}
+              onClick={handleEndWorkSession}
               className="mt-4 px-8"
             >
-              Oturumu Sonlandır
+              Çalışmayı Bitir ve Tartışmaya Geç
             </Button>
           </div>
         ) : (
           /* Tartışma Oturumu Ekranı */
-          <div>
-            <h1 className="text-3xl font-bold mb-6 text-ktp_black dark:text-ktp_white">
-              💬 Tartışma Zamanı
-            </h1>
-            <Card>
-              <div className="mb-4">
-                <Tag color="green" className="mb-2">
-                  30 dakika tartışma süresi
-                </Tag>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Çalıştığınız konular hakkında konuşun ve tartışın.
-                </p>
+          <div className="py-8">
+            {/* Başlık */}
+            <div className="text-center mb-8">
+              <div className="inline-block mb-4">
+                <div className="w-20 h-20 bg-gradient-to-br from-teal-500 to-teal-700 rounded-full flex items-center justify-center shadow-lg">
+                  <TeamOutlined className="text-white text-4xl" />
+                </div>
               </div>
+              <h1 className="text-5xl font-bold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-teal-700">
+                Tartışma Zamanı
+              </h1>
+              <p className="text-lg text-gray-600 dark:text-gray-400">
+                Çalıştığınız konular hakkında sohbet edin ve öğrenin
+              </p>
+            </div>
 
-              {/* Chat Bölümü */}
-              <div className="border rounded-lg p-4 mb-4" style={{ height: "400px", overflowY: "auto" }}>
-                {messages.length === 0 ? (
-                  <div className="text-center text-gray-400 py-8">
-                    Henüz mesaj yok. İlk mesajı siz gönderin!
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {messages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={`p-2 rounded ${
-                          msg.sender === "Sen"
-                            ? "bg-blue-100 dark:bg-blue-900 ml-auto text-right"
-                            : "bg-gray-100 dark:bg-gray-800"
-                        }`}
-                        style={{ maxWidth: "70%" }}
+            {/* Katılımcılar */}
+            <div className="max-w-2xl mx-auto mb-6">
+              <Card className="border-0 shadow-lg">
+                <div className="flex items-center justify-center gap-4">
+                  {participants.map((participant) => (
+                    <div key={participant.id} className="flex flex-col items-center">
+                      <Avatar
+                        size={48}
+                        style={{ 
+                          backgroundColor: participant.name === "Sen" ? '#667eea' : '#14b8a6',
+                          fontSize: '20px'
+                        }}
                       >
-                        <div className="font-semibold">{msg.sender}</div>
-                        <div>{msg.text}</div>
-                        <div className="text-xs text-gray-500">{msg.timestamp}</div>
-                      </div>
-                    ))}
+                        {participant.avatar}
+                      </Avatar>
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mt-1">
+                        {participant.name}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+
+            {/* Chat Bölümü */}
+            <div className="max-w-3xl mx-auto">
+              <Card className="border-0 shadow-2xl">
+                {/* Chat Header */}
+                <div className="border-b pb-4 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                        Grup Sohbeti
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {participants.length} kişi aktif
+                      </p>
+                    </div>
+                    <Tag color="green">Canlı</Tag>
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* Mesaj Gönderme */}
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Mesajınızı yazın..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onPressEnter={handleSendMessage}
-                  size="large"
-                />
-                <Button
-                  type="primary"
-                  icon={<SendOutlined />}
-                  onClick={handleSendMessage}
-                  className="bg-ktp_delft_blue hover:bg-ktp_federal_blue"
+                {/* Messages */}
+                <div 
+                  className="border rounded-lg p-4 mb-4 bg-gray-50 dark:bg-gray-900" 
+                  style={{ height: "500px", overflowY: "auto" }}
                 >
-                  Gönder
-                </Button>
-              </div>
+                  {messages.length === 0 ? (
+                    <div className="text-center py-6">
+                      <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <TeamOutlined className="text-gray-400 text-xl" />
+                      </div>
+                      <p className="text-gray-400 text-base mb-1">Henüz mesaj yok</p>
+                      <p className="text-gray-500 text-xs">İlk mesajı siz gönderin!</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {messages.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={`flex ${msg.sender === "Sen" ? "justify-end" : "justify-start"}`}
+                        >
+                          <div
+                            className={`max-w-[70%] rounded-2xl px-4 py-3 ${
+                              msg.sender === "Sen"
+                                ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white"
+                                : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-md"
+                            }`}
+                          >
+                            <div className="font-semibold text-sm mb-1 opacity-80">
+                              {msg.sender}
+                            </div>
+                            <div className="text-base">{msg.text}</div>
+                            <div className={`text-xs mt-1 ${
+                              msg.sender === "Sen" ? "text-blue-100" : "text-gray-400"
+                            }`}>
+                              {msg.timestamp}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-              <Button
-                danger
-                onClick={handleEndSession}
-                className="mt-4"
-              >
-                Oturumu Sonlandır
-              </Button>
-            </Card>
+                {/* Message Input */}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Mesajınızı yazın..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onPressEnter={handleSendMessage}
+                    size="large"
+                    className="rounded-lg"
+                  />
+                  <Button
+                    type="primary"
+                    icon={<SendOutlined />}
+                    onClick={handleSendMessage}
+                    className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 border-0"
+                    size="large"
+                  >
+                    Gönder
+                  </Button>
+                </div>
+
+                {/* Sonlandır Butonu */}
+                <div className="mt-6 pt-4 border-t">
+                  <Button
+                    danger
+                    onClick={handleEndSession}
+                    size="large"
+                    className="w-full"
+                  >
+                    Oturumu Tamamen Sonlandır
+                  </Button>
+                </div>
+              </Card>
+            </div>
           </div>
         )
         )}

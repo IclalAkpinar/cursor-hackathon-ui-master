@@ -6,18 +6,21 @@ import {
   BookOutlined, 
   TeamOutlined,
   CheckCircleOutlined,
-  SendOutlined 
+  PlayCircleOutlined
 } from "@ant-design/icons";
 
 interface Session {
   id: string;
   userName: string;
   technique: string;
+  techniqueId: string;
   area: string;
   level: string;
   startTime: string;
   duration: number;
   isPrivate: boolean;
+  currentParticipants: number;
+  maxParticipants: number;
 }
 
 // Kullanıcı maskotları - her kullanıcıya tatlı bir karakter
@@ -34,6 +37,15 @@ const USER_MASCOTS: Record<string, string> = {
   "Elif": "🦄",
   "Can": "🐭",
   "Merve": "🐧",
+  "Deniz": "🐬",
+  "Arda": "🦉",
+  "Ceren": "🦋",
+  "Emre": "🐯",
+  "Gizem": "🦄",
+  "Hakan": "🐺",
+  "Irmak": "🐿️",
+  "Kaan": "🦆",
+  "Leyla": "🐨",
 };
 
 // Kullanıcıya maskot ata veya varsayılan avatar kullan
@@ -41,10 +53,19 @@ const getMascot = (userName: string): string => {
   return USER_MASCOTS[userName] || "👤";
 };
 
+// Teknik ID'den teknik ismine mapping
+const TECHNIQUE_NAMES: Record<string, string> = {
+  "pomodoro": "Pomodoro Tekniği",
+  "52-17": "52/17 Tekniği",
+  "time-blocking": "Time Blocking",
+  "eisenhower": "Eisenhower Matrisi",
+};
+
 export const MatchSessions: React.FC = () => {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [userPreferences, setUserPreferences] = useState<any>(null);
+  const [allSessions, setAllSessions] = useState<Session[]>([]);
 
   useEffect(() => {
     // LocalStorage'dan kullanıcı tercihlerini al
@@ -54,48 +75,82 @@ export const MatchSessions: React.FC = () => {
     }
 
     // Mock data - gerçek uygulamada API'den gelecek
-    const mockSessions: Session[] = [
-      {
-        id: "1",
-        userName: "Ahmet",
-        technique: "Pomodoro Tekniği",
-        area: "İngilizce",
-        level: "Üniversite",
-        startTime: "13:30",
-        duration: 25,
-        isPrivate: false,
-      },
-      {
-        id: "2",
-        userName: "Ayşe",
-        technique: "52/17 Tekniği",
-        area: "Data Mining",
-        level: "Üniversite",
-        startTime: "14:00",
-        duration: 52,
-        isPrivate: false,
-      },
-      {
-        id: "3",
-        userName: "Mehmet",
-        technique: "Time Blocking",
-        area: "Diferansiyel Denklem",
-        level: "Üniversite",
-        startTime: "15:00",
-        duration: 60,
-        isPrivate: false,
-      },
+    // Her teknik ve alan kombinasyonu için oturumlar oluşturuldu
+    const users = ["Ahmet", "Ayşe", "Mehmet", "Zeynep", "Ali", "Fatma", "Mustafa", "Ayşegül", "Burak", "Elif", "Deniz", "Arda", "Ceren", "Emre", "Gizem", "Hakan", "Irmak", "Kaan", "Leyla", "Mert"];
+    const areas = ["İngilizce", "Data Mining", "Diferansiyel Denklem", "Algoritma", "Veri Yapıları", "Makine Öğrenmesi", "Web Geliştirme", "Mobil Geliştirme"];
+    const techniques = [
+      { id: "pomodoro", name: "Pomodoro Tekniği", duration: 25 },
+      { id: "52-17", name: "52/17 Tekniği", duration: 52 },
+      { id: "time-blocking", name: "Time Blocking", duration: 60 },
+      { id: "eisenhower", name: "Eisenhower Matrisi", duration: 45 },
     ];
+    const levels = ["İlkokul", "Ortaokul", "Lise", "Üniversite", "Yüksek Lisans"];
+    
+    let sessionId = 1;
+    const mockSessions: Session[] = [];
+    
+    // Her teknik ve alan kombinasyonu için oturumlar oluştur
+    techniques.forEach((technique, techIndex) => {
+      areas.forEach((area, areaIndex) => {
+        // Her alan için farklı seviyelerden oturumlar
+        const level = levels[techIndex % levels.length];
+        const currentId = sessionId;
+        const hour = 9 + Math.floor(currentId / 3);
+        const minute = (currentId * 15) % 60;
+        const startTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        
+        mockSessions.push({
+          id: String(sessionId++),
+          userName: users[(techIndex * areas.length + areaIndex) % users.length],
+          technique: technique.name,
+          techniqueId: technique.id,
+          area: area,
+          level: level,
+          startTime: startTime,
+          duration: technique.duration,
+          isPrivate: false,
+          currentParticipants: Math.floor(Math.random() * 2),
+          maxParticipants: 2,
+        });
+      });
+    });
+
+    // Tüm oturumları sakla
+    setAllSessions(mockSessions);
 
     // Seçilen tercihlere göre filtreleme
     if (prefs) {
       const prefsObj = JSON.parse(prefs);
-      const filtered = mockSessions.filter(
+      
+      // Önce tam eşleşmeleri bul
+      let filtered = mockSessions.filter(
         (session) =>
-          session.technique.includes(prefsObj.technique) ||
-          session.area === prefsObj.area ||
+          session.techniqueId === prefsObj.technique &&
+          session.area === prefsObj.area &&
           session.level === prefsObj.level
       );
+      
+      // Eğer tam eşleşme yoksa, teknik ve alan eşleşmelerini göster
+      if (filtered.length === 0) {
+        filtered = mockSessions.filter(
+          (session) =>
+            session.techniqueId === prefsObj.technique &&
+            session.area === prefsObj.area
+        );
+      }
+      
+      // Hala boşsa, sadece teknik eşleşmelerini göster
+      if (filtered.length === 0) {
+        filtered = mockSessions.filter(
+          (session) => session.techniqueId === prefsObj.technique
+        );
+      }
+      
+      // En azından birkaç sonuç göster
+      if (filtered.length === 0) {
+        filtered = mockSessions.slice(0, 10);
+      }
+      
       setSessions(filtered);
     } else {
       setSessions(mockSessions);
@@ -103,12 +158,33 @@ export const MatchSessions: React.FC = () => {
   }, []);
 
   const handleJoinRequest = (sessionId: string) => {
-    message.success("Katılım isteği gönderildi!");
-    // Burada API çağrısı yapılacak
-    // Navigate to appointments page
-    setTimeout(() => {
-      navigate("/appointments");
-    }, 1000);
+    // Seçilen oturumu bul - allSessions kullan
+    const selectedSession = allSessions.find(s => s.id === sessionId);
+    
+    if (selectedSession) {
+      // Oturumu localStorage'a kaydet
+      const existingAppointments = JSON.parse(localStorage.getItem("appointments") || "[]");
+      const newAppointment = {
+        id: selectedSession.id,
+        userName: selectedSession.userName,
+        technique: selectedSession.technique,
+        area: selectedSession.area,
+        level: selectedSession.level,
+        startTime: selectedSession.startTime,
+        status: "accepted" as const,
+        countdown: selectedSession.duration * 60, // dakikayı saniyeye çevir
+      };
+      
+      existingAppointments.push(newAppointment);
+      localStorage.setItem("appointments", JSON.stringify(existingAppointments));
+      
+      message.success("Oturum randevularınıza eklendi!");
+      
+      // Navigate to appointments page
+      setTimeout(() => {
+        navigate("/appointments");
+      }, 1000);
+    }
   };
 
   return (
@@ -126,7 +202,7 @@ export const MatchSessions: React.FC = () => {
             {userPreferences ? (
               <>
                 <BookOutlined className="mr-2" />
-                {userPreferences.technique} ile <span className="font-semibold text-ktp_delft_blue">{userPreferences.area}</span> çalışan arkadaşlarını bul
+                {TECHNIQUE_NAMES[userPreferences.technique] || userPreferences.technique} ile <span className="font-semibold text-ktp_delft_blue">{userPreferences.area}</span> çalışan arkadaşlarını bul
               </>
             ) : (
               "Aynı hedeflerle çalışan arkadaşlarını keşfet"
@@ -204,6 +280,9 @@ export const MatchSessions: React.FC = () => {
                         <Tag color="warning" className="text-sm">
                           🎓 {session.level}
                         </Tag>
+                        <Tag color="purple" className="text-sm">
+                          👥 {session.currentParticipants}/{session.maxParticipants}
+                        </Tag>
                       </div>
                       
                       {/* Time Info */}
@@ -225,7 +304,7 @@ export const MatchSessions: React.FC = () => {
                     <Button
                       type="primary"
                       size="large"
-                      icon={<SendOutlined />}
+                      icon={<PlayCircleOutlined />}
                       onClick={() => handleJoinRequest(session.id)}
                       className="bg-gradient-to-r from-ktp_delft_blue to-ktp_federal_blue hover:from-ktp_federal_blue hover:to-ktp_delft_blue border-0 shadow-md hover:shadow-lg transition-all duration-300"
                       style={{ 
@@ -236,7 +315,7 @@ export const MatchSessions: React.FC = () => {
                         padding: '0 32px'
                       }}
                     >
-                      Katılım İste
+                      Randevuya Ekle
                     </Button>
                   </div>
                 </div>

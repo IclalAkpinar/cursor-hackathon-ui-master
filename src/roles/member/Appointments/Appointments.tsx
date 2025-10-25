@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Button, Tag, message, Empty, Badge } from "antd";
+import { Card, Button, Tag, message, Empty } from "antd";
 import { useNavigate } from "react-router-dom";
 import { 
   ClockCircleOutlined, 
@@ -45,8 +45,11 @@ const getMascot = (userName: string): string => {
 
 export const Appointments: React.FC = () => {
   const navigate = useNavigate();
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+
+  useEffect(() => {
+    // Demo randevuları - her zaman onaylı ve görünür
+    const ahmetAppointment: Appointment = {
       id: "1",
       userName: "Ahmet",
       technique: "Pomodoro Tekniği",
@@ -54,63 +57,96 @@ export const Appointments: React.FC = () => {
       level: "Üniversite",
       startTime: "13:30",
       status: "accepted",
-      countdown: 1800, // 30 dakika
-    },
-    {
-      id: "2",
+      countdown: 1500, // 25 dakika
+    };
+
+    const ayseAppointment: Appointment = {
+      id: "demo-2",
       userName: "Ayşe",
       technique: "52/17 Tekniği",
       area: "Data Mining",
       level: "Üniversite",
       startTime: "14:00",
-      status: "pending",
-      countdown: 3600,
-    },
-  ]);
+      status: "accepted",
+      countdown: 3120, // 52 dakika
+    };
+
+    // localStorage'dan randevuları oku
+    const savedAppointments = localStorage.getItem("appointments");
+    if (savedAppointments) {
+      const parsed = JSON.parse(savedAppointments);
+      // Demo randevularını kontrol et ve ekle
+      const hasAhmet = parsed.some((apt: Appointment) => apt.id === "1");
+      const hasAyse = parsed.some((apt: Appointment) => apt.id === "demo-2");
+      
+      let finalAppointments = [...parsed];
+      
+      if (!hasAhmet) {
+        finalAppointments.unshift(ahmetAppointment);
+      }
+      if (!hasAyse) {
+        finalAppointments.splice(1, 0, ayseAppointment);
+      }
+      
+      setAppointments(finalAppointments);
+    } else {
+      // Varsayılan örnek randevular
+      const defaultAppointments: Appointment[] = [
+        {
+          id: "1",
+          userName: "Ahmet",
+          technique: "Pomodoro Tekniği",
+          area: "İngilizce",
+          level: "Üniversite",
+          startTime: "13:30",
+          status: "accepted",
+          countdown: 1500, // 25 dakika
+        },
+        {
+          id: "demo-2",
+          userName: "Ayşe",
+          technique: "52/17 Tekniği",
+          area: "Data Mining",
+          level: "Üniversite",
+          startTime: "14:00",
+          status: "accepted",
+          countdown: 3120, // 52 dakika
+        },
+        {
+          id: "3",
+          userName: "Mehmet",
+          technique: "Time Blocking",
+          area: "Algoritma",
+          level: "Üniversite",
+          startTime: "15:00",
+          status: "accepted",
+          countdown: 3600, // 60 dakika
+        },
+        {
+          id: "4",
+          userName: "Zeynep",
+          technique: "Eisenhower Matrisi",
+          area: "Makine Öğrenmesi",
+          level: "Üniversite",
+          startTime: "16:00",
+          status: "accepted",
+          countdown: 2700, // 45 dakika
+        },
+      ];
+      setAppointments(defaultAppointments);
+      localStorage.setItem("appointments", JSON.stringify(defaultAppointments));
+    }
+  }, []);
 
   const handleStartSession = (appointmentId: string) => {
     message.success("Oturum başlatılıyor...");
     navigate(`/session/${appointmentId}`);
   };
 
-  const CountdownDisplay = ({ appointment }: { appointment: Appointment }) => {
-    const [timeLeft, setTimeLeft] = useState(appointment.countdown);
-
-    useEffect(() => {
-      if (timeLeft <= 0) {
-        message.success("Oturum başladı!");
-        handleStartSession(appointment.id);
-        return;
-      }
-
-      const timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }, [timeLeft, appointment.id]);
-
-    const formatTime = (seconds: number) => {
-      const mins = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      return `${mins}:${secs.toString().padStart(2, "0")}`;
-    };
-
-    const getColor = () => {
-      if (timeLeft > 600) return "success"; // > 10 dk
-      if (timeLeft > 180) return "warning"; // > 3 dk
-      return "error"; // < 3 dk
-    };
-
-    return (
-      <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 px-4 py-2 rounded-lg border border-blue-200 dark:border-gray-600">
-        <Badge status={getColor()} />
-        <ClockCircleOutlined className="text-ktp_delft_blue text-xl" />
-        <span className="font-mono text-2xl font-bold text-ktp_delft_blue">
-          {formatTime(timeLeft)}
-        </span>
-      </div>
-    );
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -254,25 +290,22 @@ export const Appointments: React.FC = () => {
                   {/* Right Section - Actions */}
                   <div className="flex flex-col items-end gap-3 flex-shrink-0">
                     {appointment.status === "accepted" && (
-                      <>
-                        <CountdownDisplay appointment={appointment} />
-                        <Button
-                          type="primary"
-                          size="large"
-                          icon={<PlayCircleOutlined />}
-                          onClick={() => handleStartSession(appointment.id)}
-                          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-emerald-500 hover:to-green-500 border-0 shadow-md hover:shadow-lg transition-all duration-300"
-                          style={{ 
-                            height: '50px',
-                            borderRadius: '12px',
-                            fontSize: '16px',
-                            fontWeight: '600',
-                            padding: '0 32px'
-                          }}
-                        >
-                          Oturumu Başlat
-                        </Button>
-                      </>
+                      <Button
+                        type="primary"
+                        size="large"
+                        icon={<PlayCircleOutlined />}
+                        onClick={() => handleStartSession(appointment.id)}
+                        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-emerald-500 hover:to-green-500 border-0 shadow-md hover:shadow-lg transition-all duration-300"
+                        style={{ 
+                          height: '50px',
+                          borderRadius: '12px',
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          padding: '0 32px'
+                        }}
+                      >
+                        Oturumu Başlat
+                      </Button>
                     )}
                     {appointment.status === "pending" && (
                       <div className="text-center">
