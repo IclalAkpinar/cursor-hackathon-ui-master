@@ -1,6 +1,7 @@
 import { GetMail } from "../../roles/none/ForgotPassword/GetMail/GetMail";
 import { ResetPassword } from "../../roles/none/ForgotPassword/ResetPassword/ResetPassword";
 import { Login } from "../../roles/none/Login/Login";
+import { Register } from "../../roles/none/Register/Register";
 import { VerifyMail } from "../../roles/none/VerifyMail/VerifyMail";
 import { NotFound } from "../../sharedComponent/404/404";
 
@@ -18,6 +19,11 @@ export const noneRouteDatas: routerType[] = [
   {
     path: "/login",
     component: <Login />,
+  },
+
+  {
+    path: "/register",
+    component: <Register />,
   },
 
   {

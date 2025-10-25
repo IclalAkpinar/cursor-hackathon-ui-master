@@ -52,7 +52,7 @@ export const ResetPasswordForm = () => {
         name="newPassword"
         rules={[
           { required: true, message: "Lütfen şifrenizi giriniz!" },
-          { min: 8, message: "Şifre en az 8 karakter olmalıdır!" },
+          { min: 6, message: "Şifre en az 6 karakter olmalıdır!" },
         ]}
       >
         <Input.Password

@@ -2,48 +2,45 @@ import { Button, Form, Input, message } from "antd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UsePost } from "../../../../hooks";
-import { loginDataType } from "../models/login.data";
+import { registerDataType } from "../models/register.data";
 
-export const LoginForm = () => {
+export const RegisterForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState<boolean>(false);
 
-  const handleLogin = async (formData: loginDataType) => {
+  const handleRegister = async (formData: registerDataType) => {
     setLoading(true);
-    const response = await UsePost<boolean, loginDataType>(
-      "/auth/login",
-      formData
+    const { confirmPassword, ...data } = formData;
+    
+    const response = await UsePost<boolean, Omit<registerDataType, 'confirmPassword'>>(
+      "/auth/register",
+      data
     );
     
     if (response.error) {
-      message.error("Şifre veya email hatalı! Tekrar Deneyiniz", 3);
+      message.error(response.errorMessage || "Kayıt işlemi başarısız! Tekrar deneyiniz", 3);
       setLoading(false);
     } else if (response.data) {
-      message.success("Giriş başarılı! Yönlendiriliyorsunuz...", 2);
-      // Başarılı login sonrası sayfayı yenile ki authentication kontrolü yapılsın
+      message.success("Kayıt başarılı! E-posta adresinizi kontrol ediniz.", 3);
       setTimeout(() => {
-        window.location.href = "/";
-      }, 1000);
+        navigate("/login");
+      }, 2000);
     }
   };
 
-  const registerClick = () => {
-    navigate("/register");
-  };
-
-  const forgotPasswordClick = () => {
-    navigate("/getMail");
+  const loginClick = () => {
+    navigate("/login");
   };
 
   return (
     <Form
       size="large"
       initialValues={{ remember: true }}
-      onFinish={handleLogin}
+      onFinish={handleRegister}
       autoComplete="off"
       layout="vertical"
     >
-      <Form.Item<loginDataType>
+      <Form.Item<registerDataType>
         label={<span className="dark:text-white">E-posta</span>}
         name="email"
         rules={[
@@ -58,7 +55,8 @@ export const LoginForm = () => {
           className="dark:text-white"
         />
       </Form.Item>
-      <Form.Item<loginDataType>
+      
+      <Form.Item<registerDataType>
         label={<span className="dark:text-white">Şifre</span>}
         name="password"
         rules={[
@@ -73,40 +71,52 @@ export const LoginForm = () => {
           className="dark:text-white"
         />
       </Form.Item>
+
+      <Form.Item
+        label={<span className="dark:text-white">Şifreyi Onayla</span>}
+        name="confirmPassword"
+        dependencies={["password"]}
+        rules={[
+          { required: true, message: "Lütfen şifrenizi onaylayınız!" },
+          ({ getFieldValue }) => ({
+            validator(_, value) {
+              if (!value || getFieldValue("password") === value) {
+                return Promise.resolve();
+              }
+              return Promise.reject(new Error("Şifreler uyuşmuyor!"));
+            },
+          }),
+        ]}
+      >
+        <Input.Password
+          style={{
+            backgroundColor: "var(--ant-input-bg)",
+          }}
+          className="dark:text-white"
+        />
+      </Form.Item>
+
       <div className="flex flex-col sm:flex-row gap-y-4 justify-between items-start">
         <span className="text-gray-600 dark:text-gray-200">
-          Hesabın yok mu?
+          Zaten hesabın var mı?
           <span
-            onClick={registerClick}
+            onClick={loginClick}
             className="text-ktp_black dark:text-ktp_white font-semibold underline text-sm w-full sm:w-auto px-2 cursor-pointer hover:text-[#4096ff] dark:hover:text-[#4096ff]"
           >
-            Kayıt Ol
+            Giriş Yap
           </span>
         </span>
-        <span
-          onClick={forgotPasswordClick}
-          className="text-gray-700 dark:text-white text-sm underline cursor-pointer hover:text-[#BA2038] dark:hover:text-[#BA2038] "
-        >
-          Şifremi Unuttum
-        </span>
       </div>
+      
       <div className="mb-0">
-        <Form.Item wrapperCol={{ span: 24 }} className="mt-8">
+        <Form.Item wrapperCol={{ span: 24 }}>
           <Button
-            color="primary"
-            variant="outlined"
+            type="primary"
             htmlType="submit"
-            className="w-full text-lg text-ktp_black font-medium dark:bg-black dark:text-white dark:hover:bg-black dark:focus:bg-black py-5 dark:border-ktp_delft_blue"
-            style={{
-              borderWidth: "1.5px",
-              fontSize: "1.1rem",
-              transition: "all 0.3s ease",
-              backgroundColor: "var(--ant-input-bg)",
-            }}
             loading={loading}
-            disabled={loading}
+            className="w-full bg-ktp_delft_blue hover:bg-ktp_federal_blue border-0 h-12 text-base font-medium"
           >
-            {loading ? "Giriş Yapılıyor..." : "Giriş Yap"}
+            Kayıt Ol
           </Button>
         </Form.Item>
       </div>
